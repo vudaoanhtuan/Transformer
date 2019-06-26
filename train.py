@@ -7,7 +7,6 @@ import logging
 
 import torch
 from torchtext.data import Field, Dataset, BucketIterator
-from torchtext.datasets import TranslationDataset, Multi30k
 import spacy
 
 from tqdm import tqdm
@@ -15,7 +14,7 @@ from tqdm import tqdm
 from Model.utils import *
 from Model.Mask import *
 from Model.Optim import *
-
+from load_data import load_multi30k
 
 def forward_and_loss(model, src, trg, loss_fn, src_pad=1, trg_pad=1):
     trg_input = None
@@ -87,3 +86,37 @@ def evaluate_model(model, val_iter, src_pad=1, trg_pad=1):
 
 
 
+if __name__ == '__main__':
+    print("Load data")
+    (SRC, TRG), (train_ds, val_ds, test_ds) = load_multi30k()
+    src_pad = SRC.vocab.stoi['pad']
+    trg_pad = TRG.vocab.stoi['pad']
+
+    BATCH_SIZE = 32
+    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    train_iter = BucketIterator(
+        train_ds,
+        batch_size=BATCH_SIZE,
+        device=DEVICE,
+        # shuffle=True
+    )
+
+    val_iter = BucketIterator(
+        val_ds,
+        batch_size=BATCH_SIZE,
+        device=DEVICE,
+        # shuffle=True
+    )
+
+    SCR_NUMWORD = len(SRC.vocab.itos)
+    TRG_NUMWORD = len(TRG.vocab.itos)
+    LR = 0.0001
+
+    print("Init model")
+    model = get_model(SCR_NUMWORD,TRG_NUMWORD, device=DEVICE) # base model
+    optimizer = torch.optim.Adam(model.parameters(), lr=LR, betas=(0.9, 0.98), eps=1e-9)
+    sched = CosineWithRestarts(optimizer, T_max=len(train_iter))
+
+    train_model(model, optimizer, train_iter, scheduler=sched, src_pad=src_pad, trg_pad=trg_pad)
+    evaluate_model(model, val_iter, src_pad=src_pad, trg_pad=trg_pad)
