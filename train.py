@@ -65,7 +65,7 @@ def train_model(model, optimizer, train_iter, src_pad=1, trg_pad=1, scheduler=No
             "sched": None if scheduler is None else scheduler.state_dict(),
         }
         
-        torch.save(state, os.path.join(WEIGHT_PATH, "cp_epoch_%d.h5" % (epoch_num)))
+        torch.save(state, save_path)
 
 
 def evaluate_model(model, val_iter, src_pad=1, trg_pad=1):
