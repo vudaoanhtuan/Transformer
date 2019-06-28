@@ -2,7 +2,7 @@ import os
 import torch
 import torch.nn as nn
 
-from Model import Transformer
+from .Transformer import Transformer
 
 
 def get_model(src_vocab, trg_vocab, d_model=512, d_ff=2048, n_layers=6, heads=8, dropout=0.1, device=-1):

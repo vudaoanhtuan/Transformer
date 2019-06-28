@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from Layer import * 
+from .Layer import * 
 
 
 def get_clones(module, N):
