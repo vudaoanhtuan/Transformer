@@ -5,15 +5,22 @@ import torch.nn as nn
 from .Transformer import Transformer
 
 
-def get_model(src_vocab, trg_vocab, 
+def get_model(src_vocab_size, trg_vocab_size, 
         d_model=512, d_ff=2048, 
         n_layers=6, heads=8, dropout=0.1, 
-        encoder_layer=EncoderLayer, decoder_layer=DecoderLayer):
+        encoder_layer=None, decoder_layer=None):
 
     assert d_model % heads == 0
     assert dropout < 1
 
-    model = Transformer(src_vocab, trg_vocab, d_model, d_ff, n_layers, heads, dropout, encoder_layer, decoder_layer)
+    if encoder_layer is None and decoder_layer is not None:
+        model = Transformer(src_vocab_size, trg_vocab_size, d_model, d_ff, n_layers, heads, dropout, decoder_layer=decoder_layer)
+    elif encoder_layer is not None and decoder_layer is None:
+        model = Transformer(src_vocab_size, trg_vocab_size, d_model, d_ff, n_layers, heads, dropout, encoder_layer=encoder_layer)
+    elif encoder_layer is None and decoder_layer is None:
+        model = Transformer(src_vocab_size, trg_vocab_size, d_model, d_ff, n_layers, heads, dropout)
+    else:
+        model = Transformer(src_vocab_size, trg_vocab_size, d_model, d_ff, n_layers, heads, dropout, encoder_layer, decoder_layer)
 
     for p in model.parameters():
         if p.dim() > 1:

@@ -43,11 +43,13 @@ class Decoder(nn.Module):
         return self.norm(x)
 
 class Transformer(nn.Module):
-    def __init__(self, src_vocab, trg_vocab, d_model, d_ff, N, heads, dropout, encoder_layer=EncoderLayer, decoder_layer=DecoderLayer):
+    def __init__(self, src_vocab_size, trg_vocab_size, 
+            d_model, d_ff, N, heads, dropout, 
+            encoder_layer=EncoderLayer, decoder_layer=DecoderLayer):
         super().__init__()
-        self.encoder = Encoder(src_vocab, d_model, d_ff, N, heads, dropout, encoder_layer)
-        self.decoder = Decoder(trg_vocab, d_model, d_ff, N, heads, dropout, decoder_layer)
-        self.out = nn.Linear(d_model, trg_vocab)
+        self.encoder = Encoder(src_vocab_size, d_model, d_ff, N, heads, dropout, encoder_layer)
+        self.decoder = Decoder(trg_vocab_size, d_model, d_ff, N, heads, dropout, decoder_layer)
+        self.out = nn.Linear(d_model, trg_vocab_size)
     def forward(self, src, trg, src_mask, trg_mask):
         e_outputs = self.encoder(src, src_mask)
         d_output = self.decoder(trg, e_outputs, src_mask, trg_mask)
