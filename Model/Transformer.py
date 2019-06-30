@@ -13,12 +13,12 @@ def get_clones(module, N):
     return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
 
 class Encoder(nn.Module):
-    def __init__(self, vocab_size, d_model, d_ff, N, heads, dropout):
+    def __init__(self, vocab_size, d_model, d_ff, N, heads, dropout, encoder_layer):
         super().__init__()
         self.N = N
         self.embed = Embedder(vocab_size, d_model)
         self.pe = PositionalEncoder(d_model, dropout=dropout)
-        self.layers = get_clones(EncoderLayer(d_model, d_ff,  heads, dropout), N)
+        self.layers = get_clones(encoder_layer(d_model, d_ff,  heads, dropout), N)
         self.norm = Norm(d_model)
     def forward(self, src, mask):
         x = self.embed(src)
@@ -28,12 +28,12 @@ class Encoder(nn.Module):
         return self.norm(x)
 
 class Decoder(nn.Module):
-    def __init__(self, vocab_size, d_model, d_ff, N, heads, dropout):
+    def __init__(self, vocab_size, d_model, d_ff, N, heads, dropout, decoder_layer):
         super().__init__()
         self.N = N
         self.embed = Embedder(vocab_size, d_model)
         self.pe = PositionalEncoder(d_model, dropout=dropout)
-        self.layers = get_clones(DecoderLayer(d_model, d_ff, heads, dropout), N)
+        self.layers = get_clones(decoder_layer(d_model, d_ff, heads, dropout), N)
         self.norm = Norm(d_model)
     def forward(self, trg, e_outputs, src_mask, trg_mask):
         x = self.embed(trg)
@@ -43,10 +43,10 @@ class Decoder(nn.Module):
         return self.norm(x)
 
 class Transformer(nn.Module):
-    def __init__(self, src_vocab, trg_vocab, d_model, d_ff, N, heads, dropout):
+    def __init__(self, src_vocab, trg_vocab, d_model, d_ff, N, heads, dropout, encoder_layer=EncoderLayer, decoder_layer=DecoderLayer):
         super().__init__()
-        self.encoder = Encoder(src_vocab, d_model, d_ff, N, heads, dropout)
-        self.decoder = Decoder(trg_vocab, d_model, d_ff, N, heads, dropout)
+        self.encoder = Encoder(src_vocab, d_model, d_ff, N, heads, dropout, encoder_layer)
+        self.decoder = Decoder(trg_vocab, d_model, d_ff, N, heads, dropout, decoder_layer)
         self.out = nn.Linear(d_model, trg_vocab)
     def forward(self, src, trg, src_mask, trg_mask):
         e_outputs = self.encoder(src, src_mask)
