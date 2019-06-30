@@ -5,19 +5,20 @@ import torch.nn as nn
 from .Transformer import Transformer
 
 
-def get_model(src_vocab, trg_vocab, d_model=512, d_ff=2048, n_layers=6, heads=8, dropout=0.1, device=-1):
+def get_model(src_vocab, trg_vocab, 
+        d_model=512, d_ff=2048, 
+        n_layers=6, heads=8, dropout=0.1, 
+        encoder_layer=EncoderLayer, decoder_layer=DecoderLayer):
+
     assert d_model % heads == 0
     assert dropout < 1
 
-    model = Transformer(src_vocab, trg_vocab, d_model, d_ff, n_layers, heads, dropout)
+    model = Transformer(src_vocab, trg_vocab, d_model, d_ff, n_layers, heads, dropout, encoder_layer, decoder_layer)
 
     for p in model.parameters():
         if p.dim() > 1:
             nn.init.xavier_uniform_(p) 
-    
-    if device != -1:
-        model = model.cuda()
-    
+
     return model
 
 def load_model(model, optim=None, sched=None, path=''):
@@ -28,3 +29,5 @@ def load_model(model, optim=None, sched=None, path=''):
             optim.load_state_dict(state['optim'])
         if sched is not None:
             sched.load_state_dict(state['sched'])
+    else:
+        raise Exception("Invalid path")
