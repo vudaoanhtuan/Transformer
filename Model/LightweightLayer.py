@@ -7,13 +7,6 @@ from fairseq.modules.lightweight_convolution import LightweightConv1dTBC
 
 from .UtilLayer import *
 
-def Linear(in_features, out_features, bias=True):
-    m = nn.Linear(in_features, out_features, bias)
-    nn.init.xavier_uniform_(m.weight)
-    if bias:
-        nn.init.constant_(m.bias, 0.)
-    return m
-
 class EncoderLayer(nn.Module):
     def __init__(self, d_model, d_ff, heads, dropout=0.1, weight_softmax=True, weight_dropout=0.):
         super().__init__()
@@ -23,13 +16,13 @@ class EncoderLayer(nn.Module):
         conv_dim = d_model
         kernel_size = 3
         padding_l = kernel_size // 2 if kernel_size % 2 == 1 else ((kernel_size - 1) // 2, kernel_size // 2)
-        self.linear_1 = Linear(d_model, conv_dim*2)
+        self.linear_1 = nn.Linear(d_model, conv_dim*2)
         self.activation = nn.GLU()
         self.conv = LightweightConv1dTBC(conv_dim, kernel_size, padding_l=padding_l,
                                             weight_softmax=weight_softmax,
                                             num_heads=heads,
                                             weight_dropout=weight_dropout)
-        self.linear_2 = Linear(conv_dim, d_model)
+        self.linear_2 = nn.Linear(conv_dim, d_model)
         
         self.ff = FeedForward(d_model, d_ff, dropout=dropout)
 
@@ -80,13 +73,13 @@ class DecoderLayer(nn.Module):
         conv_dim = d_model
         kernel_size = 3
         padding_l = kernel_size // 2 if kernel_size % 2 == 1 else ((kernel_size - 1) // 2, kernel_size // 2)
-        self.linear_1 = Linear(d_model, conv_dim*2)
+        self.linear_1 = nn.Linear(d_model, conv_dim*2)
         self.activation = nn.GLU()
         self.conv = LightweightConv1dTBC(conv_dim, kernel_size, padding_l=padding_l,
                                             weight_softmax=weight_softmax,
                                             num_heads=heads,
                                             weight_dropout=weight_dropout)
-        self.linear_2 = Linear(conv_dim, d_model)
+        self.linear_2 = nn.Linear(conv_dim, d_model)
 
     def forward(self, x, e_outputs, src_mask, trg_mask):
         residual = x
