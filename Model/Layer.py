@@ -17,10 +17,18 @@ class EncoderLayer(nn.Module):
         self.dropout_2 = nn.Dropout(dropout)
         
     def forward(self, x, mask):
-        x2 = self.norm_1(x)
-        x = x + self.dropout_1(self.attn(x2,x2,x2,mask))
-        x2 = self.norm_2(x)
-        x = x + self.dropout_2(self.ff(x2))
+        residual = x
+        x = self.norm_1(x)
+        x = self.attn(x,x,x,mask)
+        x = self.dropout_1(x)
+        x = residual + x
+
+        residual = x
+        x = self.norm_2(x)
+        x = self.ff(x)
+        x = self.dropout_2(x)
+        x = residual + x
+        
         return x
 
 
@@ -40,13 +48,24 @@ class DecoderLayer(nn.Module):
         self.ff = FeedForward(d_model, d_ff, dropout=dropout)
 
     def forward(self, x, e_outputs, src_mask, trg_mask):
-        x2 = self.norm_1(x)
-        x = x + self.dropout_1(self.attn_1(x2, x2, x2, trg_mask))
-        x2 = self.norm_2(x)
-        x = x + self.dropout_2(self.attn_2(x2, e_outputs, e_outputs, \
-        src_mask))
-        x2 = self.norm_3(x)
-        x = x + self.dropout_3(self.ff(x2))
+        residual = x
+        x = self.norm_1(x)
+        x = self.attn_1(x,x,x,trg_mask)
+        x = self.dropout_1(x)
+        x = residual + x
+
+        residual = x
+        x = self.norm_2(x)
+        x = self.attn(x,e_outputs,e_outputs,src_mask)
+        x = self.dropout_2(x)
+        x = residual + x
+
+        residual = x
+        x = self.norm_3(x)
+        x = self.ff(x)
+        x = self.dropout_3(x)
+        x = residual + x
+
         return x
 
 
