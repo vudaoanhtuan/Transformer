@@ -114,9 +114,20 @@ if __name__ == '__main__':
     LR = 0.0001
 
     print("Init model")
-    model = get_model(SCR_NUMWORD,TRG_NUMWORD, device=DEVICE) # base model
+    model = get_model(SCR_NUMWORD,TRG_NUMWORD) # base model
+
+    if DEVICE.type == 'cuda':
+        model = model.cuda()
+
     optimizer = torch.optim.Adam(model.parameters(), lr=LR, betas=(0.9, 0.98), eps=1e-9)
     sched = CosineWithRestarts(optimizer, T_max=len(train_iter))
 
-    train_model(model, optimizer, train_iter, scheduler=sched, src_pad=src_pad, trg_pad=trg_pad)
-    evaluate_model(model, val_iter, src_pad=src_pad, trg_pad=trg_pad)
+
+    if not os.path.isdir("weight"):
+        os.makedirs("weight")
+
+    for i in range(30):
+        weight_path = './weight/epoch_%d.h5' % (i+1)
+        print('\nEpoch %d' % (i+1), flush=True)
+        train_model(model, optimizer, train_iter, scheduler=sched, src_pad=src_pad, trg_pad=trg_pad, save_path=weight_path)
+        evaluate_model(model, val_iter, src_pad=src_pad, trg_pad=trg_pad)

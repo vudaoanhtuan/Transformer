@@ -7,7 +7,7 @@ import torch
 
 from load_data import *
 from Model import *
-from Mask import *
+from Model.Mask import *
 
 def init_vars(src, model, SRC, TRG, beam_width=3, max_len=1000, device=-1):
     # src: 1xS, S: max sequence len
@@ -19,7 +19,9 @@ def init_vars(src, model, SRC, TRG, beam_width=3, max_len=1000, device=-1):
     if device != -1:
         outputs = outputs.cuda()
     
-    trg_mask = nopeak_mask(1, device)
+    trg_mask = nopeak_mask(1)
+    if device != -1:
+        trg_mask = trg_mask.cuda()
     
     out = model.out(model.decoder(outputs, e_output, src_mask, trg_mask))
     out = F.softmax(out, dim=-1) # 1x1xtrg_vocab
@@ -72,10 +74,11 @@ def beam_search(src, model, SRC, TRG, beam_width=3, max_len=1000, device=-1):
     ind = None
     for i in range(2, max_len):
     
-        trg_mask = nopeak_mask(i, device)
+        trg_mask = nopeak_mask(i)
+        if device != -1:
+            trg_mask = trg_mask.cuda()
 
-        out = model.out(model.decoder(outputs[:,:i],
-        e_outputs, src_mask, trg_mask))
+        out = model.out(model.decoder(outputs[:,:i], e_outputs, src_mask, trg_mask))
 
         out = F.softmax(out, dim=-1)
         
