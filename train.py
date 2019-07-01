@@ -16,7 +16,7 @@ from Model.Mask import *
 from Model.Optim import *
 from load_data import load_multi30k
 
-def forward_and_loss(model, src, trg, loss_fn, src_pad=1, trg_pad=1):
+def forward_and_loss(model, src, trg, loss_fn, src_pad, trg_pad):
     trg_input = None
     if trg is not None:
         trg_input = trg[:, :-1]
@@ -29,7 +29,7 @@ def forward_and_loss(model, src, trg, loss_fn, src_pad=1, trg_pad=1):
     return preds, loss
     
 
-def train_model(model, optimizer, train_iter, src_pad=1, trg_pad=1, scheduler=None, save_path=None):
+def train_model(model, optimizer, train_iter, src_pad, trg_pad, scheduler=None, save_path=None):
     total_loss = 0.0
     total_item = 0
 
@@ -67,7 +67,7 @@ def train_model(model, optimizer, train_iter, src_pad=1, trg_pad=1, scheduler=No
         torch.save(state, save_path)
 
 
-def evaluate_model(model, val_iter, src_pad=1, trg_pad=1):
+def evaluate_model(model, val_iter, src_pad, trg_pad):
     model.eval()
     with torch.no_grad(), tqdm(total=len(val_iter)) as pbar:
         total_loss = 0.0
@@ -89,8 +89,8 @@ def evaluate_model(model, val_iter, src_pad=1, trg_pad=1):
 if __name__ == '__main__':
     print("Load data")
     (SRC, TRG), (train_ds, val_ds, test_ds) = load_multi30k()
-    src_pad = SRC.vocab.stoi['pad']
-    trg_pad = TRG.vocab.stoi['pad']
+    src_pad = SRC.vocab.stoi['<pad>']
+    trg_pad = TRG.vocab.stoi['<pad>']
 
     BATCH_SIZE = 32
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
