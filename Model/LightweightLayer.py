@@ -27,7 +27,7 @@ class LightweightConvLayer(nn.Module):
         conv_mask = conv_mask.unsqueeze(-1) # BxSx1 => BxSxD
         x = x.masked_fill(conv_mask==0, 0)
         x = x.transpose(0, 1) # SxBxH
-        x = self.conv(x)
+        x = self.conv(x.contiguous())
         x = x.transpose(0, 1)
         x = self.linear_2(x)
         return x
@@ -42,7 +42,7 @@ class EncoderLayer(nn.Module):
 
         conv_dim = d_model
         kernel_size = 3
-        self.conv = LightweightConvLayer(d_model, conv_dim, kernel_size, padding_l=padding_l,
+        self.conv = LightweightConvLayer(d_model, conv_dim, kernel_size,
                                             weight_softmax=weight_softmax,
                                             num_heads=heads,
                                             weight_dropout=weight_dropout)
@@ -80,14 +80,13 @@ class DecoderLayer(nn.Module):
         self.dropout_1 = nn.Dropout(dropout)
         self.dropout_2 = nn.Dropout(dropout)
         self.dropout_3 = nn.Dropout(dropout)
-        
-        self.attn_1 = MultiHeadAttention(heads, d_model, dropout=dropout)
-        self.attn_2 = MultiHeadAttention(heads, d_model, dropout=dropout)
+
+        self.attn = MultiHeadAttention(heads, d_model, dropout=dropout)
         self.ff = FeedForward(d_model, d_ff, dropout=dropout)
 
         conv_dim = d_model
         kernel_size = 3
-        self.conv = LightweightConvLayer(d_model, conv_dim, kernel_size, padding_l=padding_l,
+        self.conv = LightweightConvLayer(d_model, conv_dim, kernel_size,
                                             weight_softmax=weight_softmax,
                                             num_heads=heads,
                                             weight_dropout=weight_dropout)
