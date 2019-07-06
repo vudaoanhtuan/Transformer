@@ -56,7 +56,7 @@ class DecoderLayer(nn.Module):
 
         residual = x
         x = self.norm_2(x)
-        x = self.attn(x,e_outputs,e_outputs,src_mask)
+        x = self.attn_2(x,e_outputs,e_outputs,src_mask)
         x = self.dropout_2(x)
         x = residual + x
 
